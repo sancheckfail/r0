@@ -19,6 +19,20 @@ http://127.0.0.1:8888
 
 Input is a YAML format
 
+```YAML
+id: 'coqtest'
+sh: 'coqtop 2>&1 <code | tail -n 20'
+code: |
+    Axiom LEM: forall P : Prop, P \/ ~P.
+    Lemma DNE: forall P : Prop, ~~P -> P.
+    Proof.
+       intros.
+       destruct (LEM P) as [ H1 | H2 ].
+       assumption.
+       tauto.
+       Qed.
+```       
+
 #### code
 its content will go to a file named 'code'
 
