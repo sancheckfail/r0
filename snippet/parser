@@ -1,0 +1,30 @@
+before:
+    - "chmod go-w .ghci"
+sh: "ghci 2>&1 <code"
+id: 'parser'
+fs: 
+    .ghci: ':set prompt ""'
+    Parse.hs: |
+       module Parse where
+       newtype Parse a = Parse { parse :: String -> [(a, String)] } 
+       one = Parse $ \s -> 
+           case s of 
+               [] -> []
+               (x:xs) -> [(x, xs)]
+       combine f  a b = Parse $ \s ->
+           parse a s >>= \(x, xs) ->
+           parse b xs >>= \(y, ys) ->
+           [(f x y, ys)]
+       satisfy f = Parse $ \s ->
+           case s of 
+               (x:xs) | f x -> [(x, xs)]
+               _ -> []
+       many a = Parse $ \s ->
+           (parse a s >>= \(x, z) ->
+            parse (many a) z >>= \(xs, zs) ->
+              [(x:xs, zs)]) ++ [([], s)]
+       some a = combine (:) a (many a)
+code: |
+    :load Parse
+    import Data.Char
+    parse (some (satisfy isAlpha)) "abc123"
