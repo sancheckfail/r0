@@ -22,11 +22,12 @@ Dir.mktmpdir ("/tmp") do |dir|
         files.each{|k, v|
             File.write k, v
         }
+        File.write 'code', code
         log = ""
         befores.each{|q|
             log += `#{q} 2>&1` + "\n" 
         }
-        File.write 'code', code
+        
         log += `#{sh}`
         puts log
     end
