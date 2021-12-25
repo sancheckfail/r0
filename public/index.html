@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.js" integrity="sha512-JpMCZgesTWh1iu/8ujURbwkJBgbgFWe3sTNCHdIuEvPwZuuN0nTUr2yawXahpgdEK7FOZUlW254Rp7AyDYJdjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/codemirror.min.css" integrity="sha512-CCnciBUnVXwa6IQT9q8EmGcarNit9GdKI5nJnj56B1iu0LuD13Qn/GZ+IUkrZROZaBdutN718NK6mIXdUjZGqg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.0/theme/solarized.min.css" integrity="sha512-/fyHOMgAeLm/HB9+Z0TYk1kDPdEfFDhgw68SHIyok5rW/TGTdOOVPeR3N51bkUpjr2ycg2j9/18g7qsbtLW+ig==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <style>
+            html * {margin:0;padding:0; }
+            html, body {
+                position: relative;
+                height: 100%;
+            }
+            .two-fold {
+                display: grid; 
+                position: relative;
+                width:100%; 
+                height: 100%;
+                grid-template-rows: 100%;
+                grid-template-columns: 50% 1% 49%;
+            }
+            body {
+                background: #222;
+                
+            }
+            .CodeMirror {
+                    border: 1px solid #eee;
+                    height: auto;
+                    font-family: Consolas;
+            }
+            pre {
+                font-family: Consolas;
+                color: white;
+                white-space: pre-wrap;       /* Since CSS 2.1 */
+                white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+                white-space: -pre-wrap;      /* Opera 4-6 */
+                white-space: -o-pre-wrap;    /* Opera 7 */
+                word-wrap: break-word; 
+                overflow-y: scroll;
+                height : 100%;
+            }
+            .CodeMirror-wrap pre {
+                word-break: break-word;
+            }
+            
+            
+        </style>
+    </head>
+    
+    
+    <body>
+        <div class="two-fold">
+            <div class="left">
+                <textarea id='t'></textarea>
+            </div>
+            <div class="middle"></div>
+            <div class="right">
+                <pre id="output">
+                
+                </pre>
+            </div>
+        </div>
+       
+        <script>
+           let text = localStorage.getItem('code') || ""
+            window.editor = CodeMirror.fromTextArea(document.querySelector("#t"), {
+                lineNumbers: true,
+                theme: 'solarized dark',
+                lineWrapping: true,
+            })
+            window.editor.setValue(text)
+            function gotoBottom(id){
+                var element = document.getElementById(id);
+                element.scrollTop = element.scrollHeight - element.clientHeight;
+            }
+            
+            async function sendCode(cm) {
+                let value = cm.getValue()
+                localStorage.setItem('code', value)
+                let resp = await fetch('http://localhost:8888',  {
+                   method: 'POST',
+                   mode: 'cors',
+                   cache: 'no-cache',
+                   body: value,
+                })
+                let w = await resp.text()
+                document.querySelector("#output").innerText = w
+                gotoBottom("output")
+            }
+            
+            let tm = null
+            function toggleTimer(cm) {
+                if (tm != null) {
+                    clearInterval(tm)
+                    tm = null
+                } else {
+                    tm = setInterval(function() {
+                        sendCode(cm) 
+                    }, 500)
+                }
+            }
+            editor.setOption("extraKeys", {
+               'Ctrl-H': function(cm) {
+                   toggleTimer(cm)
+               },
+               'Ctrl-G': async function(cm) {
+                   await sendCode(cm)
+               }
+            });
+            
+            let keyThres = null
+            editor.on('keydown', function(cm, e) {  
+                 if (keyThres) {
+                     clearTimeout(keyThres)
+                 }
+                 keyThres = setTimeout(async function() {
+                     await(sendCode(cm))
+                     keyThres = null
+                 }, 500)
+            });
+               
+        </script>
+    </body>
+</html>
