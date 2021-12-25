@@ -1,13 +1,19 @@
+CORSLIST = '*'
+PORT = 8888
+BIND = '0.0.0.0'
+#------------------------------------------
 require 'sinatra'
 require "sinatra/cross_origin"
 
-set :port, 8888
-set :bind, '0.0.0.0'
-set :cors_list, '*'
+
+set :port, PORT
+set :bind, BIND
+set :public_folder, 'public'
+
 class V
    def initialize
        @id = 0
-       @mt = Mutex.new
+       @mt = Mutex.new        
    end
 
    def getid
@@ -26,10 +32,10 @@ configure do
 end
 
 
-
 before do
-    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Origin'] = CORSLIST
 end
+
 
 post '/' do
 begin    
@@ -44,6 +50,10 @@ end
 options "*" do
     response.headers["Allow"] = "GET, PUT, POST, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, X-User-Email, X-Auth-Token"
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = CORSLIST
     200
+end
+
+get '/' do
+    redirect '/index.html'
 end
