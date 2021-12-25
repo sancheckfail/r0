@@ -1,5 +1,11 @@
 # r0
 
+## Install
+```shell
+apt install ruby -y (or what ever)
+gem install sinatra
+gem install sinatra-cross_origin
+```
 ## Usage
 
 ```shell
