@@ -1,6 +1,21 @@
 require 'yaml'
 require 'json'
 require 'tempfile'
+
+
+def ofcode(a)
+   if a[0] == '@'
+   begin       
+       File.read(a[1..-1])
+   rescue
+       puts "Can not open #{a}"
+       ""
+   end
+   else
+       a
+   end
+end
+
 x = File.read ARGV[0]
 y = YAML.load x
 if y['id']
@@ -17,18 +32,20 @@ exit if sh == ""
 code = y['code'] || ""
 files = y['fs'] || {}
 befores = y['before'] || []
+
+
 Dir.mktmpdir ("/tmp") do |dir|
     Dir.chdir dir do
         files.each{|k, v|
-            File.write k, v
+            File.write k, ofcode(v)
         }
-        File.write 'code', code
+        File.write 'code', ofcode(code)
         log = ""
         befores.each{|q|
-            log += `#{q} 2>&1` + "\n" 
+            log += `#{ofcode(q)} 2>&1` + "\n" 
         }
         
-        log += `#{sh}`
+        log += `#{ofcode(sh)}`
         puts log
     end
 end
