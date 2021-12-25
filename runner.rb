@@ -12,7 +12,8 @@ elsif y['load']
    exit
 end
 
-sh = y['sh'] || "bash"
+sh = y['sh'] || ""
+exit if sh == ""
 code = y['code'] || ""
 files = y['fs'] || {}
 befores = y['before'] || []
